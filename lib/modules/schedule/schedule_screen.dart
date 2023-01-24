@@ -11,12 +11,6 @@ class ScheduleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return BlocConsumer<AppCubit, AppStates>(
-      listener: (context, state) {
-      },
-      builder: (context, state) {
-
         return Scaffold(
           appBar: AppBar(
             title:  Text('Schedule',
@@ -43,23 +37,28 @@ class ScheduleScreen extends StatelessWidget {
                 )
             ),
           ),
-          body: Column(
+          body: BlocBuilder<AppCubit, AppStates>(
+      builder: (context, state) {
+          return Column(
             children: [
               Container(
-                child: DatePicker(
-                  DateTime.now(),
-                  height: 80,
-                  width: 50,
-                  initialSelectedDate: DateTime.now(),
-                  selectionColor: Colors.greenAccent.shade700,
-                  selectedTextColor: Colors.white,
-                  dateTextStyle: const TextStyle(
-                    // fontWeight: FontWeight.w200,
-                    fontSize: 10,
-                    color: Colors.black87,
-                  ),
-                  dayTextStyle: const TextStyle(
-                    fontSize: 10,
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: DatePicker(
+                    DateTime.now(),
+                    height: 80,
+                    width: 50,
+                    initialSelectedDate: DateTime.now(),
+                    selectionColor: Colors.greenAccent.shade700,
+                    selectedTextColor: Colors.white,
+                    dateTextStyle: const TextStyle(
+                      // fontWeight: FontWeight.w200,
+                      fontSize: 10,
+                      color: Colors.black87,
+                    ),
+                    dayTextStyle: const TextStyle(
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ),
@@ -91,9 +90,11 @@ class ScheduleScreen extends StatelessWidget {
               ),
 
             ],
-          ),
+          );
+  },
+),
         );
-      },
-    );
+
+   
   }
 }

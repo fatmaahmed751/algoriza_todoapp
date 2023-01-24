@@ -1,3 +1,4 @@
+import 'package:algoriza_todo_app/core/models/build_task_model.dart';
 import 'package:algoriza_todo_app/core/util/blocks/app/states.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +11,7 @@ class AppCubit extends Cubit<AppStates> {
   AppCubit() :super (AppInitialState());
 
   static AppCubit get(context) => BlocProvider.of(context);
-  late Database database;
+late Database database;
 
   TextEditingController titleController = TextEditingController();
   TextEditingController dateController = TextEditingController();
@@ -19,51 +20,32 @@ class AppCubit extends Cubit<AppStates> {
   TextEditingController repeatController = TextEditingController();
   TextEditingController remindController = TextEditingController();
   int taskColor=0;
-  bool favorite=false;
-  bool status=false;
+  int favorites=0;
+  int completed=1;
+
+  final GlobalKey<FormState> formKey=GlobalKey();
 
 
  // DateTime selectedDate = DateTime.now();
+  String startTime = DateFormat("hh:mm a").format(DateTime.now()).toString();
 
-  //String startTime = DateFormat("hh:mm a").format(DateTime.now()).toString();
 
- // int selectedColor = 0;
 
- // String endTime = "10:08";
+ int currentSelectedRemind =0;
 
-  int selectedRemind = 5;
- /* List<int>remindList =
-  [
-    5,
-    10,
-    15,
-    20,
-  ];*/
-
- // String selectedRepeat = "None";
-/*  List<String>repeatList = [
-    "None",
-    "Daily",
-    "weekly",
-    "Monthly",
-  ];*/
-
- int currentSelectedRemind = 5;
-
-  List<Map> tasks = [];
-  List<Map>completeTasks=[];
+  List<BuildTaskModel> tasks = [];
+  List<BuildTaskModel>completeTasks=[];
   List<Map>newTasks=[];
-  List<Map>favoriteTasks=[];
-
+  List<BuildTaskModel>favoriteTasks=[];
 
   void createDatabase() async {
     var databasesPath = await getDatabasesPath();
     String path = p.join(databasesPath, 'tasks.db');
 
-    databaseOpened(
+   databaseOpened(
       path: path,
     );
-    print('database created');
+   print('database created');
     emit(AppDatabaseCreated());
   }
 
@@ -76,11 +58,11 @@ class AppCubit extends Cubit<AppStates> {
         version: 1,
         onCreate: (database, version) async
         {
-          await database.execute('CREATE TABLE tasks(id INTEGER PRIMARY KEY,title TEXT,date TEXT,startTime TEXT,endTime TEXT,remind INTEGER,repeat TEXT,color INTEGER ,status TEXT,favorite TEXT )'
+          await database.execute('CREATE TABLE tasks(id INTEGER PRIMARY KEY,title TEXT,date TEXT,startTime TEXT,endTime TEXT,remind TEXT,repeat TEXT,color INTEGER ,completed INTEGER,favorites INTEGER )'
           ).then((value) {
             print('table created');
 
-            emit(AppDatabaseTableCreated());
+          //  emit(AppDatabaseTableCreated());
           })
               .catchError((error) {
             print('${error.toString()}');
@@ -88,23 +70,35 @@ class AppCubit extends Cubit<AppStates> {
         },
         onOpen: (Database db) {
           database = db;
-        // getTasksData();
+         getTasksData();
           print(tasks);
           print('open');
-        },).then((value) {
+        },
+   /* ).then((value) {
           database=value;
-    });
+    }*/
+    );
   }
 
-  void insertTodoAppDatabase(
-  //required String title,
-  ) {
+  void insertTodoAppDatabase({
+    required String title,
+    required String date,
+    required String startTime,
+    required String endTime,
+    required String reminder,
+    required String repeat,
+    required int color,
+   // required int completed,
+  // required int favorites,
+  }) {
     database.transaction((txn) async {
-      await txn.rawInsert('INSERT INTO tasks (title,date,startTime,endTime,remind,repeat,color,status,favorite)VALUES ("${titleController.text}","${dateController.text}","${startTimeController.text}","${endTimeController.text}","${remindController.text}","${repeatController.text}","$taskColor","new","${favorite.toString()}")')
+  await txn.rawInsert('INSERT INTO tasks (title,date,startTime,endTime,remind,repeat,color,completed,favorites)VALUES ("${titleController.text}","${dateController.text}","${startTimeController.text}","${endTimeController.text}","${remindController.text}","${repeatController.text}","$taskColor",0,0)')
           .then((value) {
         debugPrint('Data inserted');
+        print(tasks.toString());
+        print(startTimeController.text);
         getTasksData();
-        emit(AppDatabaseInserted());
+       //emit(AppDatabaseInserted());
       }).catchError((error) {
         debugPrint(error.toString());
       });
@@ -112,60 +106,48 @@ class AppCubit extends Cubit<AppStates> {
   }
 
 void getTasksData() async {
-
-    newTasks=[];
-    completeTasks=[];
-    favoriteTasks=[];
+  //emit(AppDatabaseInserted());
+    tasks=[];
+    //completeTasks=[];
+   // favoriteTasks=[];
   database.rawQuery('SELECT * FROM tasks').
   then((value) {
     print('gettasks');
-    tasks = value;
-    print(tasks);
-  tasks.forEach((element) {
-     if(element['status']=='new')
-      newTasks.add(element);
-      else if(element['status']=='Completed')
-       completeTasks.add(element);
-     else favoriteTasks.add(element);
-
-  });
-  print(completeTasks.length);
-  }
-
-  );
-    emit(AppGetDatabase());
-
+      for (var element in value) {
+        tasks.add(BuildTaskModel.fromJson(element));
+      }
+      emit(AppGetDatabase());
+    });
 }
 
-void upDateFavorite({
-  required bool favorite,
-  required int id,
-})async{
+void upDateCompleted(
+   int taskId,
+)async{
+ // getTasksData();
+  int completed=tasks.firstWhere((element) => element.id==taskId).completed==1?0:1;
 await database.rawUpdate(
-  'UPDATE tasks SET favorite =? WHERE id=?',
-    ['${favorite.toString()}',id],
+  'UPDATE tasks SET completed =? WHERE id=$taskId',[completed]
     ).then((value)
 {
   getTasksData();
   print(tasks);
-  emit(AppUpdateFavorite());
+  //emit(AppUpdateCompleted());
 }).catchError((error){
   print(error.toString());
 });
   }
 
-  void upDateStatusData({
-    required bool status,
-    required int id,
-  })async{
+  void upDateFavorite(
+      int taskId,
+      )async{
+    int favorites=tasks.firstWhere((element) => element.id==taskId).favorites==1?0:1;
     await database.rawUpdate(
-      'UPDATE tasks SET status =? WHERE id=?',
-      ['${status.toString()}',id],
+        'UPDATE tasks SET favorites =? WHERE id=$taskId',[favorites]
     ).then((value)
     {
-      getTasksData();
+       getTasksData();
       print(tasks);
-      emit(AppUpdateDatabaseState());
+      //emit(AppUpdateFavorite());
     }).catchError((error){
       print(error.toString());
     });
@@ -193,20 +175,24 @@ await database.rawUpdate(
             return GestureDetector( //error
               onTap: () {
                 taskColor = index;
+                emit(TaskColorChanged());
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: index == 0 ? Colors.yellow :
-                  index == 1 ? Colors.red : index == 2 ?
-                  Colors.blueAccent : Colors.deepOrange,
-                  child: taskColor == index ? const Icon(Icons.done,
+                  radius: 15,
+                  backgroundColor: index == 0 ? Colors.yellow[600] :
+                  index == 1 ? Colors.orange[300]: index == 2 ?
+                  Colors.blue[400] : Colors.deepOrange,
+                  child: taskColor==index? const Icon(Icons.done,
                     color: Colors.white,
-                    size: 16,) : Container(),
+                    size: 16,):Container(),
+
 
                 ),
+
               ),
+
             );
           }
           ),

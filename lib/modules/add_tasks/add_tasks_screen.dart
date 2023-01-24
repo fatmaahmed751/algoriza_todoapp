@@ -2,50 +2,50 @@ import 'package:algoriza_todo_app/core/util/blocks/app/cubit.dart';
 import 'package:algoriza_todo_app/core/util/blocks/app/states.dart';
 import 'package:algoriza_todo_app/modules/schedule/schedule_screen.dart';
 import 'package:algoriza_todo_app/shared/components/components.dart';
-import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
 
 class AddTasksScreen extends StatelessWidget {
-  var startTimeController = TextEditingController();
-  var endTimeController = TextEditingController();
+  TextEditingController startTimeController = TextEditingController();
+  TextEditingController endTimeController = TextEditingController();
   var taskTitle = TextInputType.text;
-  TextEditingController repeatController = TextEditingController();
-  TextEditingController remindController = TextEditingController();
   String taskColor = '';
   int selectedColor = 0;
   DateTime selectedDate = DateTime.now();
   String startTime = DateFormat("hh:mm a").format(DateTime.now()).toString();
-  int selectedRemind = 5;
-  String selectedRepeat = "None";
-  String endTime = "10:08";
-  int currentSelectedRemind = 5;
+
+  String endTime = DateFormat("hh:mm a").format(DateTime.now()).toString();
+  int currentSelectedRemind = 0;
   List<String>repeatList = [
     "None",
     "Daily",
     "weekly",
     "Monthly",
   ];
-  List<int>remindList =
+  List<ReminderModel>remindList =
   [
-    5,
-    10,
-    15,
-    20,
+    ReminderModel(reminder:'5 minutes early' , minutes: 5),
+    ReminderModel(reminder: '10 minutes early', minutes: 10),
+    ReminderModel(reminder: '15 minutes early', minutes: 15),
+    ReminderModel(reminder:'1 hours early', minutes: 1),
   ];
+
+  AddTasksScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AppCubit, AppStates>(
-      listener: (context, state) {},
+      listener: (context, state) {
+     //
+      },
       builder: (context, state) {
         AppCubit cubit = AppCubit.get(context);
 
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
+            toolbarHeight: 60.0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: Colors.black87,
@@ -66,7 +66,7 @@ class AddTasksScreen extends StatelessWidget {
             ),
           ),
           body: Padding(
-            padding: const EdgeInsets.all(15.0),
+            padding: const EdgeInsets.all(10.0),
             child: Center(
               child: SingleChildScrollView(
                 child: Column(
@@ -79,14 +79,14 @@ class AddTasksScreen extends StatelessWidget {
                     const SizedBox(height: 10.0,),
                     defaultFormField(
                         controller: cubit.titleController,
-                        hint: 'task Title',
+                        hint: 'Task Title',
                         radius: BorderRadius.circular(10.0)),
                     const SizedBox(height: 10.0,),
-                    subTitle(text: 'DeadLine'),
+                    subTitle(text: 'Data'),
                     const SizedBox(height: 10.0,),
                     defaultFormField(
                       type: TextInputType.datetime,
-                      hint: '2022-7-22',
+                      hint: 'Task Date',
                       controller: cubit.dateController,
                       icon: IconButton(icon: (const Icon(Icons
                           .calendar_month_sharp,
@@ -100,7 +100,7 @@ class AddTasksScreen extends StatelessWidget {
                             lastDate: DateTime.parse('2023-07-15'),
                           ).then((value) {
                             cubit.dateController.text =
-                                DateFormat.yMMMd().format(value!);
+                                DateFormat.yMd().format(value!);
                           });
                         },
 
@@ -121,8 +121,8 @@ class AddTasksScreen extends StatelessWidget {
                               const SizedBox(height: 10.0,),
 
                               defaultFormField(
-                                hint: '12:00 PM',
-                                controller: cubit.startTimeController,
+                                hint: 'Start Time',
+                                controller: startTimeController,
                                 radius: BorderRadius.circular(7.0),
                                 type: TextInputType.datetime,
                                 icon: IconButton(
@@ -135,8 +135,9 @@ class AddTasksScreen extends StatelessWidget {
                                       context: context,
                                       initialTime: TimeOfDay.now(),
                                     ).then((value) {
-                                      cubit.startTimeController.text =
-                                          value!.format(context);
+
+                          startTimeController.text=value!.
+                                   format(context);
                                     });
                                   },
                                 ),),
@@ -146,33 +147,45 @@ class AddTasksScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 10.0,),
                         Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              subTitle(text: 'End Time'),
-                              const SizedBox(height: 10.0,),
-                              defaultFormField(
-                                hint: '18:00 PM',
-                                controller: cubit.endTimeController,
-                                type: TextInputType.datetime,
-                                icon: IconButton(
-                                  icon: (const Icon(Icons.watch_later_outlined,
-                                    size: 20.0,)),
-                                  onPressed: () async {
-                                    await showTimePicker(
-                                      context: context,
-                                      initialTime: TimeOfDay.now(),
-                                    ).then((value) {
-                                      cubit.endTimeController.text =
-                                          value!.format(context);
-                                    });
-                                  },
+                          child: Form(
+                            key: cubit.formKey,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                subTitle(text: 'End Time'),
+                                const SizedBox(height: 10.0,),
+                                defaultFormField(
+                                  hint: 'End Time',
+                                  controller: endTimeController,
+                                  type: TextInputType.datetime,
 
+                                  icon: IconButton(
+                                    icon: (const Icon(Icons.watch_later_outlined,
+                                      size: 20.0,)),
+                                    onPressed: () async {
+                                       await showTimePicker(
+                                           context: context,
+                                           initialTime: TimeOfDay.now(),
+                                       ).then((value) {
+
+                                         endTimeController.text =value!.format(context);
+                                              /* DateFormat('hh:mm a').format(
+                                                   DateTime.now());*/
+                                       });
+                                    },
+                                  ),
+                                  function:(String? value){
+                                    if(value?.isEmpty??true){
+                                      return 'time error';
+                                    }else{
+                                      return null;
+                                    }
+                                  },
+                                  radius: BorderRadius.circular(7.0),
                                 ),
-                                radius: BorderRadius.circular(7.0),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -182,25 +195,34 @@ class AddTasksScreen extends StatelessWidget {
                     const SizedBox(height: 10.0,),
                     defaultFormField(
                       hint: '5 minutes early',
-                      controller: cubit.remindController,
+                      controller:cubit.remindController,
                       radius: BorderRadius.circular(10.0),
                       suffixWidget: DropdownButton(
-                        //value: selectedRemind,
+                      //  value: cubit.remindController,
+                        isDense: true,
                         icon: const Icon(Icons.keyboard_arrow_down_outlined,
-                          size: 30,
+                          size: 26,
                           color: Colors.black,
                         ),
                         iconSize: 30,
                         elevation: 4,
-                        underline: Container(height: 0,),
-                        items: remindList.map<DropdownMenuItem<String>>((
-                            int value) {
-                          return DropdownMenuItem<String>(
-                              value: value.toString(),
-                              child: Text(value.toString()));
-                        }).toList(),
-                        onChanged: (String? newSelectedRemind) {
-                          cubit.remindController.text= newSelectedRemind!;
+                       underline: Container(height: 0,),
+                        items: remindList.asMap().map((
+                        key,value)=>MapEntry(
+                          key,
+                        DropdownMenuItem(
+                              value:  value.minutes,
+                              child:Text( value.reminder.toString()),
+                        ),
+                        ),
+                        ).values.toList(),
+                        onChanged: (value) {
+                    //currentSelectedRemind=int.parse(value.toString());
+                   cubit.remindController.text= value.toString();
+                          //currentSelectedRemind=int.parse(value.toString());
+                       //  cubit.currentSelectedRemind=int.parse(value.toString());
+                          print(value);
+                          //remindController.text= !;
                         },
                       ),
                     ),
@@ -209,7 +231,7 @@ class AddTasksScreen extends StatelessWidget {
                     subTitle(text: 'Repeat'),
                     const SizedBox(height: 10.0,),
                     defaultFormField(
-                      hint: '${selectedRepeat}',
+                      hint: 'Daily ',
                       controller: cubit.repeatController,
                       radius: BorderRadius.circular(10.0),
                       suffixWidget: DropdownButton(
@@ -223,7 +245,7 @@ class AddTasksScreen extends StatelessWidget {
                           return DropdownMenuItem<String>(
                             value: value.toString(),
                             child: Text(value!,
-                                style: const TextStyle(color: Colors.grey)),
+                                style: const TextStyle(color: Colors.black)),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
@@ -239,12 +261,22 @@ class AddTasksScreen extends StatelessWidget {
                     ),
 
                     DefaultButton(text: 'Create a Task',
-                        function: () {
-                          Navigator.push(
-                              context, MaterialPageRoute(
-                              builder: (context) => const ScheduleScreen()));
+                  function: () {
+                    Navigator.push(
+                        context, MaterialPageRoute(
+                        builder: (context) => const ScheduleScreen()));
                           cubit.insertTodoAppDatabase(
+                            title:cubit.titleController.text,
+                            date: cubit.dateController.text,
+                            startTime:cubit.startTimeController.text ,
+                            reminder:currentSelectedRemind.toString(),
+                            endTime:cubit.endTimeController.text,
+                            repeat: cubit.repeatController.text,
+                            //completed:cubit.completed,
+                            color:cubit.taskColor,
+                          //  favorites: cubit.favorites,
                           );
+
                         }),
                   ],
                 ),

@@ -14,10 +14,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 //import 'package:todo_app_algoriza/modules/completed_tasks/complete_tasks_screen.dart';
 //import 'package:todo_app_algoriza/modules/uncompleted_tasks/uncomplete_tasks_screen.dart';
 
-class BoardScreen extends StatelessWidget {
+class BoardScreen extends StatefulWidget {
 
   @override
+  State<BoardScreen> createState() => _BoardScreenState();
+
+}
+
+class _BoardScreenState extends State<BoardScreen> {
+  @override
   Widget build(BuildContext context) {
+   late TabController tabController;
     return DefaultTabController(
       length: 4,
       child: BlocConsumer<AppCubit, AppStates>(
@@ -44,79 +51,112 @@ class BoardScreen extends StatelessWidget {
               ),
               actions: [
                 IconButton(
+                  onPressed:(){
+                    Navigator.push(
+                        context, MaterialPageRoute(
+                        builder: (context) => const ScheduleScreen()));
+                  },
+                  icon: const Icon(Icons.edit_note,
+                    color: Colors.black,
+                    size: 23.0,),),
+                IconButton(
+                  onPressed:(){
+                    Navigator.push(
+                        context, MaterialPageRoute(
+                        builder: (context) => const ScheduleScreen()));
+                  },
+                  icon: const Icon(Icons.notifications_none,
+                    color: Colors.black,
+                    size: 20.0,),),
+               // SizedBox(width:2),
+
+                IconButton(
                     onPressed:(){
                       Navigator.push(
                           context, MaterialPageRoute(
                           builder: (context) => const ScheduleScreen()));
                     },
                   icon: const Icon(Icons.calendar_month_outlined,
-              color: Colors.black54,
-                  size: 23.0,),),
+              color: Colors.black,
+                  size: 20.0,),),
+
               ],
             ),
             body: Padding(
               padding: const EdgeInsets.all(3.0),
-              child: Column(
-                 mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Divider(),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+              child: DefaultTabController(
+                length: 4,
+                child: Column(
+                   mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Divider(
+                      thickness: 1.0,
                     ),
-                    child: const TabBar(
-                      indicator: BoxDecoration(
+                    Container(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                       ),
-                      isScrollable: true,
-                      labelColor: Colors.black,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: [
-                        Tab(icon: Text('All',
-                          style: TextStyle(
-                            fontSize: 13.0,
-                          ),),),
-                        Tab(icon: Text('Completed',
-                          style: TextStyle(
-                            fontSize: 13.0,
-                          ),),),
-                        Tab(icon: Text('UnCompleted',
-                          style: TextStyle(
-                            fontSize: 13.0,
-                          ),),),
-                        Tab(icon: Text('Favorite',
-                          style: TextStyle(
-                            fontSize: 13.0,
-                          ),),),
+                      child:  const TabBar(
+                        indicator: BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        isScrollable: true,
+                        labelColor: Colors.black,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorSize: TabBarIndicatorSize.label,
+                        indicatorColor: Colors.black,
+                        indicatorWeight: 3,
+                        labelStyle: TextStyle(
+                          fontWeight:FontWeight.w600
+                        ),
+                        tabs: [
+                          Tab(icon: Text('All',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                            ),),),
+                          Tab(icon: Text('Completed',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                            ),),),
+                          Tab(icon: Text('UnCompleted',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                            ),),),
+                          Tab(icon: Text('Favorites',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                            ),),),
 
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const Divider(
-                    height: 1.5,
-                    color: Colors.grey,
-                  ),
-
-
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        Center(child: AllTasks(),),
-                        Center(child: CompletedTasks(),),
-                        Center(child: UnCompletedTasks(),),
-                        Center(child: FavoriteTasks(),),
-                      ],
+                    const Divider(
+                      height: 1.5,
+                      color: Colors.grey,
                     ),
-                  ),
 
-                  DefaultButton(text: 'Add a task',
-                      function: () {
-                        Navigator.push(context,
-                          MaterialPageRoute(builder: (context) =>
-                              AddTasksScreen()),);
-                      }),
-                ],
 
+                    Expanded(
+                      child: TabBarView(
+                      //  controller: tabController,
+                        children: [
+                          const Center(child: AllTasks(),),
+                          Center(child: CompletedTasks(),),
+                          Center(child: UnCompletedTasks(),),
+                          Center(child: FavoriteTasks(),),
+                        ],
+                      ),
+                    ),
+
+                    DefaultButton(text: 'Add New Task',
+                        function: () {
+                          Navigator.push(context,
+                            MaterialPageRoute(builder: (context) =>
+                                AddTasksScreen()),);
+                        }),
+                  ],
+
+                ),
               ),
             ),
 
